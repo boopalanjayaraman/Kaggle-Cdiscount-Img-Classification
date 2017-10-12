@@ -11798,15 +11798,7 @@ div#notebook {
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">NCORE</span> <span class="o">=</span> <span class="mi">8</span>
 <span class="n">all_categories</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Manager</span><span class="p">()</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
-<span class="sd">&#39;&#39;&#39;final_data = mp.Manager().list() #for multi core processing</span>
-<span class="sd">final_test_data = mp.Manager().list() #for multi core processing&#39;&#39;&#39;</span>
 
-<span class="n">final_data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span> <span class="c1">#for multi core processing</span>
-<span class="n">final_test_data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span> <span class="c1">#for multi core processing</span>
-
-<span class="c1">#initialize arrays</span>
-<span class="n">final_test_data_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
-<span class="n">final_data_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
 <span class="n">all_categories_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
 
 <span class="c1">#categories to int dictionary</span>
@@ -11819,8 +11811,8 @@ div#notebook {
 <span class="n">n_example</span> <span class="o">=</span> <span class="mi">100</span> <span class="c1">#from kaggle page</span>
 
 <span class="n">all_categories_filename_format</span> <span class="o">=</span> <span class="s1">&#39;allcategoriesdata_</span><span class="si">{0}</span><span class="s1">.p&#39;</span>
-<span class="n">train_data_batch_file_format</span> <span class="o">=</span> <span class="s1">&#39;train_data_batch_</span><span class="si">{0}</span><span class="s1">_</span><span class="si">{1}</span><span class="s1">.p&#39;</span>
-<span class="n">test_data_batch_file_format</span> <span class="o">=</span> <span class="s1">&#39;test_data_batch_</span><span class="si">{0}</span><span class="s1">_</span><span class="si">{1}</span><span class="s1">.p&#39;</span>
+<span class="n">train_data_batch_file_format</span> <span class="o">=</span> <span class="s1">&#39;training_batches/train_data_batch_</span><span class="si">{0}</span><span class="s1">_</span><span class="si">{1}</span><span class="s1">.p&#39;</span>
+<span class="n">test_data_batch_file_format</span> <span class="o">=</span> <span class="s1">&#39;testing_batches/test_data_batch_</span><span class="si">{0}</span><span class="s1">_</span><span class="si">{1}</span><span class="s1">.p&#39;</span>
 
 <span class="n">show_every</span> <span class="o">=</span> <span class="mi">10000</span>
 </pre></div>
@@ -11908,7 +11900,7 @@ div#notebook {
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#data record preprocess sub-function </span>
-<span class="k">def</span> <span class="nf">process_record_train</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">process_record_train</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">final_data</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    processes each record from the training / test file during preprocessing function execution for training dataset</span>
 <span class="sd">    : record: record to be processed</span>
@@ -11920,9 +11912,10 @@ div#notebook {
         <span class="n">picture</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">pic</span><span class="p">[</span><span class="s1">&#39;picture&#39;</span><span class="p">]))</span>    
         <span class="c1">#adding a record for each image with same product id and category id (ungrouping the images)</span>
         <span class="n">flattened_picture</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">picture</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">input_row</span> <span class="o">=</span> <span class="n">flattened_picture</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">input_row</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">category_id</span><span class="p">)</span> <span class="c1">#will be pushed to second column</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">input_row</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">product_id</span><span class="p">)</span>
+        <span class="n">input_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">flattened_picture</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int16&#39;</span><span class="p">)</span>
+        <span class="n">input_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">input_row</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">categ_to_int</span><span class="p">[</span><span class="n">category_id</span><span class="p">])</span> <span class="c1">#will be pushed to second column </span>
+        <span class="c1">#pushed int value of category to reduce memory size so we can stay with int16</span>
+        <span class="n">input_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">input_row</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">product_id</span><span class="p">)</span>
         <span class="n">final_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">input_row</span><span class="p">)</span>
 </pre></div>
 
@@ -11937,7 +11930,7 @@ div#notebook {
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#data record preprocess sub-function for test data set</span>
-<span class="k">def</span> <span class="nf">process_record_test</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">process_record_test</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">final_test_data</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    processes each record from the training / test file during preprocessing function execution for test data set</span>
 <span class="sd">    : record: record to be processed</span>
@@ -11948,8 +11941,8 @@ div#notebook {
         <span class="n">picture</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">pic</span><span class="p">[</span><span class="s1">&#39;picture&#39;</span><span class="p">]))</span>
         <span class="c1">#adding a record for each image with same product id and category id (ungrouping the images)</span>
         <span class="n">flattened_picture</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">picture</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">input_row</span> <span class="o">=</span> <span class="n">flattened_picture</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">input_row</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">product_id</span><span class="p">)</span>
+        <span class="n">input_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">flattened_picture</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int16&#39;</span><span class="p">)</span>
+        <span class="n">input_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">input_row</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">product_id</span><span class="p">)</span>
         <span class="n">final_test_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">input_row</span><span class="p">)</span>
 </pre></div>
 
@@ -11970,7 +11963,9 @@ div#notebook {
 <span class="sd">    : filepath: path of the training file</span>
 <span class="sd">    : return: void</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-   
+    <span class="n">final_data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">final_data_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    
     <span class="c1">#loading data from file</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Starting to go through the Set. Time: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">ctime</span><span class="p">()))</span>
     
@@ -11980,19 +11975,17 @@ div#notebook {
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;processed records: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
         <span class="k">if</span><span class="p">(</span><span class="n">c</span> <span class="o">&gt;</span> <span class="n">limit</span><span class="p">):</span>
             <span class="k">break</span>
-        <span class="n">process_record_train</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+        <span class="n">process_record_train</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">final_data</span><span class="p">)</span>
         
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;File is processed. Time: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">ctime</span><span class="p">()))</span>
     
-    <span class="k">global</span> <span class="n">final_data_array</span><span class="p">,</span> <span class="n">final_data</span>
-    <span class="n">final_data_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">final_data</span><span class="p">)</span>
+    <span class="n">final_data_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">final_data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int16&#39;</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="n">final_data_array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">final_data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     
     <span class="c1">#save preprocessed data to batch files after one hot encoding them</span>
-    <span class="k">if</span> <span class="n">enum_start</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">batch</span> <span class="o">=</span> <span class="mi">10</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">batch</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">save_preprocessed_data</span><span class="p">(</span><span class="n">final_data_array</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">file_suffix</span><span class="p">)</span>
+    <span class="n">save_preprocessed_data</span><span class="p">(</span><span class="n">final_data_array</span><span class="p">,</span> <span class="n">file_suffix</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Preprocessing is done and saved. Time: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">ctime</span><span class="p">()))</span>
 </pre></div>
 
@@ -12007,12 +12000,15 @@ div#notebook {
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#test data preprocess function </span>
-<span class="k">def</span> <span class="nf">process_test_file</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">enum_start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_suffix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">process_test_file</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">enum_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_suffix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    processes test file and saves the output to batch files for loading them later</span>
 <span class="sd">    : filepath: path of the test file on disk</span>
 <span class="sd">    : return: void</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">final_test_data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">final_test_data_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    
     <span class="c1">#loading data from file</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;TestFile: Starting to go through the Set. Time: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">ctime</span><span class="p">()))</span>
     
@@ -12023,18 +12019,13 @@ div#notebook {
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;processed records: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
         <span class="k">if</span><span class="p">(</span><span class="n">c</span> <span class="o">&gt;</span> <span class="n">limit</span><span class="p">):</span>
             <span class="k">break</span>
-        <span class="n">process_record_test</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+        <span class="n">process_record_test</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">final_test_data</span><span class="p">)</span>
     
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;TestFile: File is processed. Time: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">ctime</span><span class="p">()))</span>
     
-    <span class="k">global</span> <span class="n">final_test_data_array</span><span class="p">,</span> <span class="n">final_test_data</span>
-    <span class="n">final_test_data_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">final_test_data</span><span class="p">)</span>
+    <span class="n">final_test_data_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">final_test_data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int16&#39;</span><span class="p">)</span>
     
     <span class="c1">#save preprocessed data to batch files after one hot encoding them</span>
-    <span class="k">if</span> <span class="n">enum_start</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">batch</span> <span class="o">=</span> <span class="mi">10</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">batch</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">save_preprocessed_test_data</span><span class="p">(</span><span class="n">final_test_data_array</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">file_suffix</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Preprocessing is done and saved. Time: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">ctime</span><span class="p">()))</span>
 </pre></div>
@@ -12096,7 +12087,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="prompt input_prompt">In&nbsp;[19]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">create_one_hot_label</span><span class="p">(</span><span class="n">original_label</span><span class="p">,</span> <span class="n">label_length</span><span class="p">,</span> <span class="n">one_hot_labels</span><span class="p">):</span>
@@ -12106,8 +12097,13 @@ div#notebook {
 <span class="sd">    : one_hot_labels: the array that contains all one hot label</span>
 <span class="sd">    : return: void</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">one_hot_label</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">label_length</span><span class="p">)</span>
-    <span class="n">one_hot_label</span><span class="p">[</span><span class="n">categ_to_int</span><span class="p">[</span><span class="n">original_label</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">one_hot_label</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">label_length</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int16&#39;</span><span class="p">)</span>
+    
+    <span class="c1">#commenting below line since now conversion to index happens while preparing the matrix.</span>
+    <span class="c1">#one_hot_label[categ_to_int[original_label]] = 1</span>
+    <span class="c1">#so changing it to</span>
+    <span class="n">one_hot_label</span><span class="p">[</span><span class="n">original_label</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    
     <span class="n">one_hot_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">one_hot_label</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">one_hot_encode</span><span class="p">(</span><span class="n">data_batch</span><span class="p">):</span>
@@ -12118,6 +12114,8 @@ div#notebook {
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">one_hot_labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
     <span class="n">label_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">categ_to_int</span><span class="p">)</span>
+    
+    <span class="c1">#print(data_batch)</span>
     
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data_batch</span><span class="p">)):</span>
         <span class="n">original_label</span> <span class="o">=</span> <span class="n">data_batch</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># category column</span>
@@ -12138,7 +12136,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">save_preprocessed_data</span><span class="p">(</span><span class="n">final_data_array</span><span class="p">,</span> <span class="n">batches</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">file_suffix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">save_preprocessed_data</span><span class="p">(</span><span class="n">final_data_array</span><span class="p">,</span> <span class="n">file_suffix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    saves preprocessed data array into batch files using pickle</span>
 <span class="sd">    : final_data_array: data array formed from file</span>
@@ -12148,18 +12146,12 @@ div#notebook {
     <span class="n">final_data_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">final_data_array</span><span class="p">)</span>
     <span class="c1"># one hot encode all the categories / labels</span>
     <span class="n">labels_array</span> <span class="o">=</span> <span class="n">one_hot_encode</span><span class="p">(</span><span class="n">final_data_array</span><span class="p">)</span>
-    
-    <span class="n">count_per_batch</span> <span class="o">=</span> <span class="n">final_data_length</span> <span class="o">//</span> <span class="n">batches</span>
-    
-    <span class="n">final_data_array</span><span class="o">=</span> <span class="n">final_data_array</span><span class="p">[:</span><span class="n">batches</span><span class="o">*</span><span class="n">count_per_batch</span><span class="p">]</span>
-    <span class="n">labels_array</span> <span class="o">=</span> <span class="n">labels_array</span><span class="p">[:</span><span class="n">batches</span><span class="o">*</span><span class="n">count_per_batch</span><span class="p">]</span>
-    
-    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batches</span><span class="p">):</span>
-        <span class="n">features</span> <span class="o">=</span> <span class="n">final_data_array</span><span class="p">[(</span><span class="n">batch</span> <span class="o">*</span> <span class="n">count_per_batch</span><span class="p">):</span> <span class="p">((</span><span class="n">batch</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">count_per_batch</span><span class="p">)]</span>
-        <span class="n">labels</span> <span class="o">=</span>  <span class="n">labels_array</span><span class="p">[(</span><span class="n">batch</span> <span class="o">*</span> <span class="n">count_per_batch</span><span class="p">):</span> <span class="p">((</span><span class="n">batch</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">count_per_batch</span><span class="p">)]</span>
         
-        <span class="n">filename</span> <span class="o">=</span> <span class="n">train_data_batch_file_format</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">file_suffix</span><span class="p">)</span>
-        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">((</span><span class="n">features</span><span class="p">,</span> <span class="n">labels</span><span class="p">),</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">))</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">final_data_array</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">labels</span> <span class="o">=</span>  <span class="n">labels_array</span>
+
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">train_data_batch_file_format</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">file_suffix</span><span class="p">)</span>
+    <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">((</span><span class="n">features</span><span class="p">,</span> <span class="n">labels</span><span class="p">),</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">))</span>
 </pre></div>
 
 </div>
@@ -12172,7 +12164,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[13]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">save_preprocessed_test_data</span><span class="p">(</span><span class="n">final_test_data_array</span><span class="p">,</span> <span class="n">batches</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">file_suffix</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">save_preprocessed_test_data</span><span class="p">(</span><span class="n">final_test_data_array</span><span class="p">,</span> <span class="n">file_suffix</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    saves preprocessed data array into batch files using pickle</span>
 <span class="sd">    : final_test_data_array: test data array formed from file</span>
@@ -12181,15 +12173,9 @@ div#notebook {
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">final_data_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">final_test_data_array</span><span class="p">)</span>
     
-    <span class="n">count_per_batch</span> <span class="o">=</span> <span class="n">final_data_length</span> <span class="o">//</span> <span class="n">batches</span>
-    
-    <span class="n">final_test_data_array</span><span class="o">=</span> <span class="n">final_test_data_array</span><span class="p">[:</span><span class="n">batches</span><span class="o">*</span><span class="n">count_per_batch</span><span class="p">]</span>
-    
-    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batches</span><span class="p">):</span>
-        <span class="n">features</span> <span class="o">=</span> <span class="n">final_test_data_array</span><span class="p">[(</span><span class="n">batch</span> <span class="o">*</span> <span class="n">count_per_batch</span><span class="p">):</span> <span class="p">((</span><span class="n">batch</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">count_per_batch</span><span class="p">)]</span>
-        
-        <span class="n">filename</span> <span class="o">=</span> <span class="n">test_data_batch_file_format</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">file_suffix</span><span class="p">)</span>
-        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">((</span><span class="n">features</span><span class="p">),</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">))</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">final_test_data_array</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">test_data_batch_file_format</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">file_suffix</span><span class="p">)</span>
+    <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">((</span><span class="n">features</span><span class="p">),</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">))</span>
 </pre></div>
 
 </div>
@@ -12199,10 +12185,10 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[81]:</div>
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">process_all_categories</span><span class="p">(</span><span class="s1">&#39;data/train_example.bson&#39;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#process_all_categories(&#39;data/train_example.bson&#39;)</span>
 </pre></div>
 
 </div>
@@ -12219,10 +12205,7 @@ div#notebook {
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Starting to go through the file. Time: Tue Oct 10 20:44:58 2017
-records processed: 0, time: Tue Oct 10 20:44:58 2017
-File is processed. Time: Tue Oct 10 20:44:58 2017
-all categories processed.
+<pre>File already exists. Seems already it is processed.
 </pre>
 </div>
 </div>
@@ -12238,7 +12221,7 @@ all categories processed.
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#test with training example file</span>
 
-<span class="n">process_training_file</span><span class="p">(</span><span class="s1">&#39;data/train_example.bson&#39;</span><span class="p">)</span>
+<span class="c1">#process_training_file(&#39;data/train_example.bson&#39;)</span>
 </pre></div>
 
 </div>
@@ -12273,7 +12256,7 @@ Preprocessing is done and saved. Time: Tue Oct 10 19:52:25 2017
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">final_data_array</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#final_data_array[:,1]</span>
 </pre></div>
 
 </div>
@@ -12449,7 +12432,8 @@ all categories processed.
 <div class="prompt input_prompt">In&nbsp;[14]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">load_categ_to_int_dicts</span><span class="p">(</span><span class="s1">&#39;data/train.bson&#39;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#Load dictionaries - categ_to_int and int_to_categ from files to objects</span>
+<span class="n">load_categ_to_int_dicts</span><span class="p">(</span><span class="s1">&#39;data/train.bson&#39;</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12492,7 +12476,7 @@ all categories processed.
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="prompt input_prompt">In&nbsp;[21]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">preprocess_test_batches</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">override_batch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -12502,16 +12486,19 @@ all categories processed.
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">input_data</span> <span class="o">=</span> <span class="n">bson</span><span class="o">.</span><span class="n">decode_file_iter</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">))</span>
     
-    <span class="n">limit</span> <span class="o">=</span> <span class="mi">500000</span>
+    <span class="n">limit</span> <span class="o">=</span> <span class="mi">10000</span>
     <span class="n">batches_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_train</span> <span class="o">/</span> <span class="n">limit</span><span class="p">)</span>
     <span class="n">batch_range</span> <span class="o">=</span> <span class="n">batches_count</span> <span class="k">if</span> <span class="n">override_batch</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">override_batch</span>
-    <span class="k">for</span> <span class="n">batch_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batches_count</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">batch_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_range</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;starting with batch: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">batch_idx</span><span class="p">))</span>
         <span class="n">result_filename</span> <span class="o">=</span> <span class="n">test_data_batch_file_format</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">result_filename</span><span class="p">):</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Batch File: </span><span class="si">{0}</span><span class="s1"> already exists. Seems already it is processed. Moving on..&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result_filename</span><span class="p">))</span>
             <span class="k">continue</span>
-        <span class="n">process_test_file</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">enum_start</span><span class="o">=</span><span class="n">batch_idx</span><span class="o">*</span><span class="n">limit</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="p">(</span><span class="n">batch_idx</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">limit</span><span class="p">,</span> <span class="n">file_suffix</span><span class="o">=</span><span class="n">batch_idx</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">process_test_file</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">enum_start</span><span class="o">=</span><span class="n">batch_idx</span><span class="o">*</span><span class="n">limit</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="p">(</span><span class="n">batch_idx</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">limit</span><span class="p">,</span> <span class="n">file_suffix</span><span class="o">=</span><span class="n">batch_idx</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in processing training batch:</span><span class="si">{0}</span><span class="s2">, limit:</span><span class="si">{2}</span><span class="s2">, error:</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">batch_idx</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="n">limit</span><span class="p">))</span>
         
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;all test files are preprocessed. cool!&#39;</span><span class="p">)</span>
 </pre></div>
@@ -12523,7 +12510,7 @@ all categories processed.
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="prompt input_prompt">In&nbsp;[22]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">preprocess_training_batches</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">override_batch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -12533,16 +12520,19 @@ all categories processed.
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">input_data</span> <span class="o">=</span> <span class="n">bson</span><span class="o">.</span><span class="n">decode_file_iter</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">))</span>
     
-    <span class="n">limit</span> <span class="o">=</span> <span class="mi">500000</span>
+    <span class="n">limit</span> <span class="o">=</span> <span class="mi">10000</span>
     <span class="n">batches_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_train</span> <span class="o">/</span> <span class="n">limit</span><span class="p">)</span>
     <span class="n">batch_range</span> <span class="o">=</span> <span class="n">batches_count</span> <span class="k">if</span> <span class="n">override_batch</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">override_batch</span>
-    <span class="k">for</span> <span class="n">batch_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batches_count</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">batch_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_range</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;starting with batch: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">batch_idx</span><span class="p">))</span>
         <span class="n">result_filename</span> <span class="o">=</span> <span class="n">train_data_batch_file_format</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">result_filename</span><span class="p">):</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Batch File: </span><span class="si">{0}</span><span class="s1"> already exists. Seems already it is processed. Moving on..&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result_filename</span><span class="p">))</span>
             <span class="k">continue</span>
-        <span class="n">process_training_file</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">enum_start</span><span class="o">=</span><span class="n">batch_idx</span><span class="o">*</span><span class="n">limit</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="p">(</span><span class="n">batch_idx</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">limit</span><span class="p">,</span> <span class="n">file_suffix</span><span class="o">=</span><span class="n">batch_idx</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">process_training_file</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">enum_start</span><span class="o">=</span><span class="n">batch_idx</span><span class="o">*</span><span class="n">limit</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="p">(</span><span class="n">batch_idx</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">limit</span><span class="p">,</span> <span class="n">file_suffix</span><span class="o">=</span><span class="n">batch_idx</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in processing training batch:</span><span class="si">{0}</span><span class="s2">, limit:</span><span class="si">{2}</span><span class="s2">, error:</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">batch_idx</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="n">limit</span><span class="p">))</span>
         
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;all training files are preprocessed. cool!&#39;</span><span class="p">)</span>
 </pre></div>
@@ -12554,7 +12544,7 @@ all categories processed.
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[20]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">preprocess_training_batches</span><span class="p">(</span><span class="s1">&#39;data/train.bson&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
@@ -12575,98 +12565,18 @@ all categories processed.
 
 <div class="output_subarea output_stream output_stdout output_text">
 <pre>starting with batch: 0
-Starting to go through the Set. Time: Wed Oct 11 22:18:43 2017
+Starting to go through the Set. Time: Thu Oct 12 21:35:24 2017
 processed records: 0
 processed records: 10000
-processed records: 20000
-processed records: 30000
-processed records: 40000
-processed records: 50000
-processed records: 60000
-processed records: 70000
-processed records: 80000
-processed records: 90000
-processed records: 100000
-processed records: 110000
-processed records: 120000
-processed records: 130000
-processed records: 140000
-processed records: 150000
-processed records: 160000
-processed records: 170000
-processed records: 180000
-processed records: 190000
-processed records: 200000
-processed records: 210000
-processed records: 220000
-processed records: 230000
-processed records: 240000
-processed records: 250000
-processed records: 260000
-processed records: 270000
-processed records: 280000
-processed records: 290000
-processed records: 300000
-processed records: 310000
-processed records: 320000
-processed records: 330000
-processed records: 340000
-processed records: 350000
-processed records: 360000
-processed records: 370000
-processed records: 380000
-processed records: 390000
-processed records: 400000
-processed records: 410000
-processed records: 420000
-processed records: 430000
-processed records: 440000
-processed records: 450000
-processed records: 460000
-processed records: 470000
-processed records: 480000
-processed records: 490000
-processed records: 500000
-processed records: 510000
-processed records: 520000
-processed records: 530000
-processed records: 540000
-processed records: 550000
-processed records: 560000
-processed records: 570000
-processed records: 580000
-processed records: 590000
-processed records: 600000
-processed records: 610000
-processed records: 620000
-processed records: 630000
-processed records: 640000
-processed records: 650000
-processed records: 660000
-processed records: 670000
-processed records: 680000
-processed records: 690000
-processed records: 700000
-processed records: 710000
-processed records: 720000
-processed records: 730000
+File is processed. Time: Thu Oct 12 21:35:40 2017
+(16390, 97202)
+[   0 3219  255 ...,  255  255  255]
+Preprocessing is done and saved. Time: Thu Oct 12 21:35:47 2017
+all training files are preprocessed. cool!
 </pre>
 </div>
 </div>
 
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">time</span><span class="o">.</span><span class="n">ctime</span><span class="p">()</span>
-</pre></div>
-
-</div>
 </div>
 </div>
 
